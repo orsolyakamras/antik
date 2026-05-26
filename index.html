@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Berzsenyi antikvitás</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f5f3ef;
+      --surface:   #ffffff;
+      --border:    #d8d2c8;
+      --accent:    #5c4a2a;
+      --accent-lt: #8a6f3e;
+      --accent-bg: #ede8df;
+      --text:      #1e1a14;
+      --text-muted:#6b6254;
+      --sidebar-w: 220px;
+      --radius:    10px;
+      --shadow:    0 2px 8px rgba(0,0,0,.10);
+    }
+
+    body {
+      font-family: "Atkinson Hyperlegible", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      background: var(--accent);
+      color: #fff;
+      padding: .5rem 1rem;
+      z-index: 1000;
+      border-radius: 0 0 var(--radius) 0;
+    }
+    .skip-link:focus { left: 0; }
+
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 1.5rem 1.25rem 1.25rem;
+      text-align: center;
+    }
+    header h1 {
+      font-size: clamp(1.5rem, 5vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+    header p {
+      font-size: .95rem;
+      opacity: .85;
+      margin-top: .4rem;
+    }
+
+    .layout {
+      display: flex;
+      align-items: flex-start;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+      gap: 1.5rem;
+    }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      position: sticky;
+      top: 1rem;
+      max-height: calc(100vh - 2rem);
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+
+    #search {
+      width: 100%;
+      padding: .55rem .8rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: .95rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s;
+    }
+    #search:focus { border-color: var(--accent-lt); }
+    #search::placeholder { color: var(--text-muted); }
+
+    .word-list {
+      overflow-y: auto;
+      flex: 1;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: .4rem 0;
+    }
+
+    .word-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: .45rem .9rem;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: .95rem;
+      color: var(--text);
+      cursor: pointer;
+      transition: background .12s, color .12s;
+      line-height: 1.4;
+    }
+    .word-btn:hover { background: var(--accent-bg); color: var(--accent); }
+    .word-btn.active { background: var(--accent); color: #fff; font-weight: 700; }
+    .word-btn:focus-visible { outline: 2px solid var(--accent-lt); outline-offset: -2px; }
+    .word-btn[hidden] { display: none; }
+
+    .content { flex: 1; min-width: 0; }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 4rem 1rem;
+      font-size: 1.05rem;
+    }
+    .empty-state strong {
+      display: block;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: .5rem;
+    }
+
+    .entry-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .entry-header {
+      display: flex;
+      align-items: baseline;
+      gap: .75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      border-bottom: 1.5px solid var(--border);
+      padding-bottom: .75rem;
+    }
+
+    .entry-title { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+
+    .badge {
+      display: inline-block;
+      background: var(--accent-bg);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: .2rem .75rem;
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: .03em;
+      text-transform: lowercase;
+    }
+
+    .entry-def { font-size: 1rem; line-height: 1.65; color: var(--text); margin-bottom: 1.25rem; }
+    .entry-note { font-size: .88rem; color: var(--text-muted); font-style: italic; margin-top: .4rem; }
+
+    .quotes-section h3 {
+      font-size: .85rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+      margin-bottom: .75rem;
+    }
+
+    .quote-block {
+      border-left: 3px solid var(--accent-lt);
+      padding: .75rem .75rem .75rem 1rem;
+      margin-bottom: .9rem;
+      background: var(--accent-bg);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+    .quote-block:last-child { margin-bottom: 0; }
+
+    .quote-text { font-style: italic; white-space: pre-line; line-height: 1.7; font-size: .97rem; }
+
+    .quote-source { font-size: .82rem; color: var(--text-muted); margin-top: .5rem; font-style: normal; }
+    .quote-source::before { content: "— "; }
+
+    .mobile-strip { display: none; }
+
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      .layout { padding: 0 0 2rem; flex-direction: column; gap: 0; }
+      .content { padding: 1rem .9rem 1rem; }
+
+      .mobile-strip {
+        display: block;
+        background: var(--surface);
+        border-bottom: 1.5px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        box-shadow: 0 2px 6px rgba(0,0,0,.07);
+      }
+      .mobile-search-row { padding: .6rem .75rem .4rem; }
+      #search-mobile {
+        width: 100%;
+        padding: .5rem .75rem;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--bg);
+        font-family: inherit;
+        font-size: .95rem;
+        color: var(--text);
+        outline: none;
+        transition: border-color .15s;
+      }
+      #search-mobile:focus { border-color: var(--accent-lt); }
+      #search-mobile::placeholder { color: var(--text-muted); }
+
+      .mobile-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: .4rem .75rem .6rem;
+        display: flex;
+        gap: .4rem;
+        scrollbar-width: none;
+      }
+      .mobile-scroll::-webkit-scrollbar { display: none; }
+
+      .mobile-chip {
+        flex-shrink: 0;
+        padding: .35rem .85rem;
+        border: 1.5px solid var(--border);
+        border-radius: 20px;
+        background: var(--surface);
+        font-family: inherit;
+        font-size: .88rem;
+        color: var(--text);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background .12s, color .12s, border-color .12s;
+      }
+      .mobile-chip:hover { background: var(--accent-bg); border-color: var(--accent-lt); }
+      .mobile-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700; }
+      .mobile-chip[hidden] { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<a href="#content" class="skip-link">Ugrás a tartalomra</a>
+
+<div class="mobile-strip" role="navigation" aria-label="Szószűrő">
+  <div class="mobile-search-row">
+    <label for="search-mobile" style="position:absolute;left:-9999px">Keresés</label>
+    <input type="search" id="search-mobile" placeholder="Keresés…" autocomplete="off" aria-label="Szó keresése">
+  </div>
+  <div class="mobile-scroll" id="chip-list" role="list"></div>
+</div>
+
+<header>
+  <h1>Berzsenyi antikvitás</h1>
+  <p>Ókori görög és római utalások Berzsenyi Dániel verseiben</p>
+</header>
+
+<div class="layout">
+  <nav class="sidebar" aria-label="Szavak listája">
+    <label for="search" style="position:absolute;left:-9999px">Keresés</label>
+    <input type="search" id="search" placeholder="Keresés…" autocomplete="off" aria-label="Szó keresése">
+    <div class="word-list" id="word-list" role="list"></div>
+  </nav>
+
+  <main class="content" id="content" tabindex="-1">
+    <div class="empty-state" id="empty-state" aria-live="polite">
+      <strong>Válassz egy szót!</strong>
+      Kattints egy névre a bal oldali listából,<br>és megjelenik a magyarázat és a Berzsenyi-idézet.
+    </div>
+    <div id="entry-display" aria-live="polite" aria-atomic="true"></div>
+  </main>
+</div>
+
+<script>
+const DATA = [{"szo": "Adria", "tipus": "helyszín", "magyarazat": "Adriai-tenger latin neve; Hadria itáliai városból ered.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (II.)", "idezet": "Egy nap lerontá Prusszia trónusát,\nA balti partot s Ádria öbleit\n     Vér festi, s a Cordillerákat\n          S Haemusokat zivatar borítja."}]}, {"szo": "aether", "tipus": "fogalom / isten", "magyarazat": "Görög: αἰθήρ – a felső, tiszta égbolt; a görög kozmológiában önálló isten (Aithér), az égi fény megtestesítője.", "megjegyzes": "", "idezetek": [{"vers": "Fohászkodás", "idezet": "A legmagasb menny s aether Uránjai,\nMellyek körülted rendre keringenek,\n     A láthatatlan férgek: a te\n          Bölcs kezeid remekelt csudái."}]}, {"szo": "Babylon", "tipus": "helyszín", "magyarazat": "Babilón, az ókori Mezopotámia legendás nagyvárosa; az antikvitás egyik jelképe.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (I.)", "idezet": "Felforgat a nagy századok érckeze\nMindent: ledűlt már a nemes Ílion,\n     A büszke Karthágó hatalma,\n          Róma s erős Babylon leomlott."}]}, {"szo": "Baktra", "tipus": "helyszín", "magyarazat": "Baktria ókori fővárosa (ma Balkh, Afganisztán); Nagy Sándor hadjárataiból ismert helyszín.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (II.)", "idezet": "Fegyvert kiáltnak Baktra vidékei,\nA Dardanellák bércei dörgenek,\n     A népek érckorláti dőlnek,\n          S a zabolák s kötelek szakadnak."}]}, {"szo": "Boreas", "tipus": "isten", "magyarazat": "Boréász, a görög mitológiában az északi szél istene; Astraios és Eósz fia.", "megjegyzes": "", "idezetek": [{"vers": "Horác", "idezet": "Zúg immár Boreas a Kemenes fölött,\nZordon fergetegek rejtik el a napot,\nNézd, a Ság tetejét hófuvatok fedik,\n     S minden bús telelésre dőlt."}]}, {"szo": "Camoena", "tipus": "isten / múzsa", "magyarazat": "Camenae, a Múzsák latin megfelelői; forrás-istennők, a jóslás és költészet védelmezői.", "megjegyzes": "", "idezetek": [{"vers": "Osztályrészem", "idezet": "Csak te légy vélem, te szelíd Camoena!\nItt is áldást hint kezed életemre,\nS a vadon tájék kiderült virány lesz\n \tGyönge dalodra."}, {"vers": "Osztályrészem", "idezet": "Essem a Grönland örökös havára,\nEssem a forró szerecsen homokra:\nOtt meleg kebled fedez, ó Camoena,\n \tItt hüves ernyőd."}]}, {"szo": "Charybdis", "tipus": "mitológiai lény", "magyarazat": "Kharübdisz, görög mitológiai örvényszörny Szicília és Itália között; Odüsszeusz útján szerepel (Odüsszeia XII. ének).", "megjegyzes": "", "idezetek": [{"vers": "Osztályrészem", "idezet": "Partra szállottam. Levonom vitorlám.\nA szelek mérgét nemesen kiálltam.\nSok Charybdis közt, sok ezer veszélyben\n \tIzzada orcám."}]}, {"szo": "Dardanellák", "tipus": "helyszín", "magyarazat": "A tengerszorost Dardanosról nevezték el; Dardanos a görög mitológiában Trója ősatyja, Zeusz és Élektra fia.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (II.)", "idezet": "Fegyvert kiáltnak Baktra vidékei,\nA Dardanellák bércei dörgenek,\n     A népek érckorláti dőlnek,\n          S a zabolák s kötelek szakadnak."}]}, {"szo": "Erynnis", "tipus": "mitológiai lény", "magyarazat": "Erinnüszök (görög) / Fúriák (latin): a görög mitológia bosszúálló istennői.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (II.)", "idezet": "Forr a világ bús tengere, ó magyar!\nÁdáz Erynnis lelke uralkodik,\n     S a föld lakóit vérbe mártott\n          Tőre dühös viadalra készti."}]}, {"szo": "Flaccus", "tipus": "személy", "magyarazat": "Quintus Horatius Flaccus (i.e. 65 – i.e. 8): a római aranykor lírikus költője; Berzsenyi legfőbb latin mintaképe.", "megjegyzes": "", "idezetek": [{"vers": "Horác", "idezet": "Halljad, Flaccus arany lantja mit énekel:\nGerjeszd a szenelőt, tölts poharadba bort,\nVillogjon fejeden balzsamomos kenet,\n     Mellyet Bengala napja főz."}]}, {"szo": "gigászi", "tipus": "mitológiai utalás", "magyarazat": "A görög gigászok (óriások) nevéből, akik Gaia és Uranosz gyermekei voltak.", "megjegyzes": "", "idezetek": [{"vers": "Búcsúzás Kemenes-aljától", "idezet": "Oh, gyakran a szívnek édes ösztöneit\nS tárgyaihoz vonzó rózsaköteleit\n     Egy tündér kép elvágja!\nA szilaj vágyások gigászi harcait,\nE bujdosó csillag ezer orkánjait\n     Bévont szemünk nem látja."}]}, {"szo": "Haemus", "tipus": "helyszín", "magyarazat": "Haimosz: az ókori görögök elnevezése a Balkán-hegységre; a görög mitológiában Boréász fiának neve is.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (II.)", "idezet": "Egy nap lerontá Prusszia trónusát,\nA balti partot s Ádria öbleit\n     Vér festi, s a Cordillerákat\n          S Haemusokat zivatar borítja."}]}, {"szo": "Hercules", "tipus": "mitológiai személy", "magyarazat": "Héraklész / Hercules: a görög-római mitológia legnagyobb hőse; az erő és hősiesség jelképe.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (I.)", "idezet": "Mert régi erkölcs s spártai férfikar\nKüzdött s vezérlett fergetegid között;\n     Birkózva győztél, s Herculesként\n          Ércbuzogány rezegett kezedben."}]}, {"szo": "Homér", "tipus": "személy", "magyarazat": "Homérosz (kb. i.e. 8. sz.): az ókori görög eposzköltészet megteremtője; az Íliász és az Odüsszeia szerzője.", "megjegyzes": "", "idezetek": [{"vers": "Vitkovics Mihályhoz", "idezet": "Igen, de minthogy minden verselők\nHomér atyánktól fogva ekkorig\nFalut dicsértek, engedd meg nekem,\nHogy én Budáról s Pestről énekeljek."}]}, {"szo": "Horác", "tipus": "személy", "magyarazat": "Quintus Horatius Flaccus (i.e. 65 – i.e. 8): római költő. Berzsenyit a \"magyar Horác\"-ként is emlegette az utókor.", "megjegyzes": "", "idezetek": [{"vers": "Vitkovics Mihályhoz", "idezet": "Midőn mosolygó bölcsességedet\nBelém enyelgi szép epistolád,\nMelyet barátunk, Horvát érdemelt,\nMelyben Horáccal fested a mezőt\nS annak szelíden bájoló nyugalmát,\nVigabban érzek s boldogabb vagyok.\nSzebbnek találom puszta lakhelyem,\nKertem virági szebben illatoznak,\nSzebben nevetnek szőlőm fürtjei,\nÉs kazlaimnak árnya hívesebb."}, {"vers": "Vitkovics Mihályhoz", "idezet": "Ha azt megúnjuk, mert mindent megún\nAz ember, s édes a változtatás,\nSzemünk legelhet Thespis bájvilágán\nS a táncolóknak szárnyas rendein,\nSzívünk örömre olvadozva repdez\nA zengzeteknek szép koncertjein;\nS ha kell, közel van kert, szőlő, liget,\nHoráccal untig ott kapálhatunk,\nS nevetni fognak ott is a bohók."}]}, {"szo": "Ílion", "tipus": "helyszín", "magyarazat": "Ílion (Ἴλιον): Trója görög neve; a trójai háború helyszíne.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (I.)", "idezet": "Felforgat a nagy századok érckeze\nMindent: ledűlt már a nemes Ílion,\n     A büszke Karthágó hatalma,\n          Róma s erős Babylon leomlott."}]}, {"szo": "Karthágó", "tipus": "helyszín", "magyarazat": "Karthágó (Carthago): ókori észak-afrikai föníciai nagyváros; Róma legnagyobb riválisa a pun háborúkban (i.e. 264–146).", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (I.)", "idezet": "Felforgat a nagy századok érckeze\nMindent: ledűlt már a nemes Ílion,\n     A büszke Karthágó hatalma,\n          Róma s erős Babylon leomlott."}]}, {"szo": "labyrinth", "tipus": "mitológiai utalás", "magyarazat": "A krétai labirintus (Labürinthos): Daidalosz építette a Minótaurosznak.", "megjegyzes": "", "idezetek": [{"vers": "A közelítő tél", "idezet": "Hervad már ligetünk, s díszei hullanak,\nTarlott bokrai közt sárga levél zörög.\nNincs rózsás labyrinth, s balzsamos illatok\nKözt nem lengedez a Zephyr."}]}, {"szo": "Larissza", "tipus": "helyszín", "magyarazat": "Larissza: Thesszália legnagyobb városa az ókori Görögországban; termékeny síkságáról volt ismert.", "megjegyzes": "", "idezetek": [{"vers": "Osztályrészem", "idezet": "Bár nem oly gazdag mezeim határa,\nMint Tarentum vagy gyönyörű Larissza,\nS nem ragyog szentelt ligetek homályin\n \tTíburi forrás;"}]}, {"szo": "Lykurgus", "tipus": "személy (történelmi)", "magyarazat": "Lükurgosz: a spártai alkotmány legendás megalapítója (i.e. 9. sz.?); a törvényhozók ókori példaképe.", "megjegyzes": "", "idezetek": [{"vers": "Vitkovics Mihályhoz", "idezet": "Hát amidőn majd véled s Helmeczinkkel\nVirághoz együtt ballagunk karöltve,\nS a bölcs öregtől új lelket veszünk!\nOnnét tehozzád s nyájas asztalodhoz,\nHol a kinyílt szív s józan ész kinál,\nS vidám szabadság s tréfa a szakács;\nOrnnét Palinkhoz, Pécel dallosához\nÉs mindazokhoz, kik barátaink,\nS velünk egyenlőn tudnak érzeni.\nHol majd hazánknak ó s új dolgait,\nMajd a világnak főbb történeteit\nSzáguldjuk által, és mustrára intjük\nA föld királyit s büszke nagyjait;\nVagy majd Kopernik égi útjain\nVizsgáljuk e nagy Minden titkait,\nÉs a világok systemáit oldjuk;\nMajd a morálnak mély törvényein\nPlatónkkal újabb s szebb respublikákat\nAlkotva, Solont s a dicső Lykurgust\nLehozzuk embert boldogítani."}]}, {"szo": "Marathon", "tipus": "helyszín", "magyarazat": "Marathón: az ókori csata helyszíne (i.e. 490); az athéni győzelem Dareiosz perzsa serege felett; a szabadságharc jelképe.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (II.)", "idezet": "Bátran vigyázom. Nem sokaság, hanem\nLélek s szabad nép tesz csuda dolgokat.\n     Ez tette Rómát föld urává,\n          Ez Marathont s Budavárt hiressé."}]}, {"szo": "Nektár", "tipus": "mitológiai fogalom", "magyarazat": "Nektár (νέκταρ): az olümposzi istenek itala; az örök ifjúságot és halhatatlanságot jelképezi.", "megjegyzes": "", "idezetek": [{"vers": "A közelítő tél", "idezet": "Lassanként koszorúm bimbaja elvirít,\nItt hágy szép tavaszom: még alig ízleli\nNektárját ajakam, még alig illetem\nEgy-két zsenge virágait."}]}, {"szo": "Platón", "tipus": "személy", "magyarazat": "Platón (i.e. 428–348): az ókori görög filozófia egyik legnagyobb alakja; az Akadémia alapítója, az ideatan megalkotója.", "megjegyzes": "", "idezetek": [{"vers": "Vitkovics Mihályhoz", "idezet": "Hát amidőn majd véled s Helmeczinkkel\nVirághoz együtt ballagunk karöltve,\nS a bölcs öregtől új lelket veszünk!\nOnnét tehozzád s nyájas asztalodhoz,\nHol a kinyílt szív s józan ész kinál,\nS vidám szabadság s tréfa a szakács;\nOrnnét Palinkhoz, Pécel dallosához\nÉs mindazokhoz, kik barátaink,\nS velünk egyenlőn tudnak érzeni.\nHol majd hazánknak ó s új dolgait,\nMajd a világnak főbb történeteit\nSzáguldjuk által, és mustrára intjük\nA föld királyit s büszke nagyjait;\nVagy majd Kopernik égi útjain\nVizsgáljuk e nagy Minden titkait,\nÉs a világok systemáit oldjuk;\nMajd a morálnak mély törvényein\nPlatónkkal újabb s szebb respublikákat\nAlkotva, Solont s a dicső Lykurgust\nLehozzuk embert boldogítani."}]}, {"szo": "Róma", "tipus": "helyszín", "magyarazat": "Az ókori római birodalom fővárosa; a világhatalmat és a nagyhatalmi bukást jelképezi.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (I.)", "idezet": "S egy gyenge széltől földre teríttetik!\nÍgy minden ország támasza, talpköve\n     A tiszta erkölcs, melly ha megvész:\n          Róma ledűl, s rabigába görbed."}, {"vers": "A magyarokhoz (I.)", "idezet": "Felforgat a nagy századok érckeze\nMindent: ledűlt már a nemes Ílion,\n     A büszke Karthágó hatalma,\n          Róma s erős Babylon leomlott."}]}, {"szo": "Solon", "tipus": "személy (történelmi)", "magyarazat": "Szolón (i.e. 640–560 k.): athéni törvényhozó és lírikus; az athéni demokrácia előkészítője, a hét bölcs egyike.", "megjegyzes": "", "idezetek": [{"vers": "Vitkovics Mihályhoz", "idezet": "Hát amidőn majd véled s Helmeczinkkel\nVirághoz együtt ballagunk karöltve,\nS a bölcs öregtől új lelket veszünk!\nOnnét tehozzád s nyájas asztalodhoz,\nHol a kinyílt szív s józan ész kinál,\nS vidám szabadság s tréfa a szakács;\nOrnnét Palinkhoz, Pécel dallosához\nÉs mindazokhoz, kik barátaink,\nS velünk egyenlőn tudnak érzeni.\nHol majd hazánknak ó s új dolgait,\nMajd a világnak főbb történeteit\nSzáguldjuk által, és mustrára intjük\nA föld királyit s büszke nagyjait;\nVagy majd Kopernik égi útjain\nVizsgáljuk e nagy Minden titkait,\nÉs a világok systemáit oldjuk;\nMajd a morálnak mély törvényein\nPlatónkkal újabb s szebb respublikákat\nAlkotva, Solont s a dicső Lykurgust\nLehozzuk embert boldogítani."}]}, {"szo": "spártai", "tipus": "helyszín / utalás", "magyarazat": "Spárta: ókori görög városállam; katonai fegyelmezettségéről és erkölcsi szigoráról volt ismert.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (I.)", "idezet": "Mert régi erkölcs s spártai férfikar\nKüzdött s vezérlett fergetegid között;\n     Birkózva győztél, s Herculesként\n          Ércbuzogány rezegett kezedben."}]}, {"szo": "sybaríta", "tipus": "helyszín / utalás", "magyarazat": "Szübariszból (Sybaris) való; görög gyarmatváros Dél-Itáliában (i.e. 720 k.); lakói fényűző életmódjukról váltak hírhedtté.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (I.)", "idezet": "Mi a magyar most? - Rút sybaríta váz.\nLetépte fényes nemzeti bélyegét,\n     S hazája feldúlt védfalából\n          Rak palotát heverőhelyének;"}]}, {"szo": "Tarentum", "tipus": "helyszín", "magyarazat": "Tarentum (görögül: Tarasz): dél-itáliai görög gyarmatváros (ma Taranto); gazdag tengerparti kolónia volt.", "megjegyzes": "", "idezetek": [{"vers": "Osztályrészem", "idezet": "Bár nem oly gazdag mezeim határa,\nMint Tarentum vagy gyönyörű Larissza,\nS nem ragyog szentelt ligetek homályin\n \tTíburi forrás;"}]}, {"szo": "Thespis", "tipus": "személy (történelmi)", "magyarazat": "Theszpisz (i.e. 6. sz.): athéni költő; a nyugati dráma és a színjátszás megalapítójának tartják.", "megjegyzes": "", "idezetek": [{"vers": "Vitkovics Mihályhoz", "idezet": "Ha azt megúnjuk, mert mindent megún\nAz ember, s édes a változtatás,\nSzemünk legelhet Thespis bájvilágán\nS a táncolóknak szárnyas rendein,\nSzívünk örömre olvadozva repdez\nA zengzeteknek szép koncertjein;\nS ha kell, közel van kert, szőlő, liget,\nHoráccal untig ott kapálhatunk,\nS nevetni fognak ott is a bohók."}]}, {"szo": "Thesszália", "tipus": "helyszín", "magyarazat": "Thesszalia: görög tartomány Közép-Görögországban; termékeny síkságáról és az Olimposz hegyéről ismert.", "megjegyzes": "", "idezetek": [{"vers": "Búcsúzás Kemenes-aljától", "idezet": "Mélyen illetődve búcsúzom tőletek;\nElmégyek: de szívem ott marad véletek\n     A szerelem láncain.\nHímezze bár útam thessali virulmány,\nKoszorúzza fejem legdicsőbb ragyogvány\n     A szerencse karjain;"}]}, {"szo": "thyrsus", "tipus": "mitológiai tárgy", "magyarazat": "Thürszosz: Dionüszosz isten jellegzetes vesszőbotja, szőlőindával és fenyőtobozzal díszítve; a termékenység és mámor jelképe.", "megjegyzes": "", "idezetek": [{"vers": "A közelítő tél", "idezet": "A hegy boltozatin néma homály borong.\nBíbor thyrsusain nem mosolyog gerezd.\nItt nemrég az öröm víg dala harsogott:\nS most minden szomorú s kiholt."}]}, {"szo": "Tíbur", "tipus": "helyszín", "magyarazat": "Tibur (ma Tivoli): kisváros Róma közelében; Horatius villájának helyszíne; a visszavonult vidéki élet jelképe.", "megjegyzes": "", "idezetek": [{"vers": "Osztályrészem", "idezet": "Bár nem oly gazdag mezeim határa,\nMint Tarentum vagy gyönyörű Larissza,\nS nem ragyog szentelt ligetek homályin\n \tTíburi forrás;"}]}, {"szo": "Títus", "tipus": "személy (történelmi)", "magyarazat": "Titus Flavius Vespasianus (i.sz. 39–81): római császár (79–81); a jó és igazságos uralkodó antik példaképe.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (II.)", "idezet": "Te Títusoddal hajdani őseid\nVárába gyűltél, hogy lebegő hajónk\n     A bölcs tanács s kormány figyelmén\n          Állni-tudó legyen a habok közt."}]}, {"szo": "Uránusz", "tipus": "isten", "magyarazat": "Uranosz: a görög mitológiában az égbolt megszemélyesítője, az istenek ősatyja; Gaia férje, a titánok és a gigászok apja.", "megjegyzes": "", "idezetek": [{"vers": "Fohászkodás", "idezet": "A legmagasb menny s aether Uránjai,\nMellyek körülted rendre keringenek,\n     A láthatatlan férgek: a te\n          Bölcs kezeid remekelt csudái."}]}, {"szo": "Xerxész", "tipus": "személy", "magyarazat": "I. Xerxész (i.e. 519–465): akhaimenida perzsa király; i.e. 480-ban megtámadta Görögországot.", "megjegyzes": "", "idezetek": [{"vers": "A magyarokhoz (I.)", "idezet": "Nem ronthatott el tégedet egykoron\nA vad tatár khán xerxesi tábora\n     S világot ostromló töröknek\n          Napkeletet leverő hatalma;"}]}, {"szo": "Zephyr", "tipus": "isten", "magyarazat": "Zephürosz: a görög mitológiában a kellemes nyugati szél megszemélyesítője; Astraios és Eósz fia, a tavasz hírnöke.", "megjegyzes": "", "idezetek": [{"vers": "A közelítő tél", "idezet": "Hervad már ligetünk, s díszei hullanak,\nTarlott bokrai közt sárga levél zörög.\nNincs rózsás labyrinth, s balzsamos illatok\nKözt nem lengedez a Zephyr."}, {"vers": "Vitkovics Mihályhoz", "idezet": "Ha van mit ennünk, innunk és szeretnünk,\nHa józan elménk, s testünk nem beteg,\nKivánhatunk-e s lelhetünk-e több jót,\nS adhatnak-é mást a királyi kincsek? -\nÍgy ír, így érez, így él most barátod,\nKi téged, édes Miskám, megkeres\nAz új Zephyrrel s első fülmilével,\nS veled csevegni és nevetni fog."}]}];
+
+function buildSidebar() {
+  const list = document.getElementById('word-list');
+  const chipList = document.getElementById('chip-list');
+  DATA.forEach((entry, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'word-btn';
+    btn.textContent = entry.szo;
+    btn.setAttribute('role', 'listitem');
+    btn.setAttribute('data-index', i);
+    btn.addEventListener('click', () => showEntry(i));
+    list.appendChild(btn);
+
+    const chip = document.createElement('button');
+    chip.className = 'mobile-chip';
+    chip.textContent = entry.szo;
+    chip.setAttribute('role', 'listitem');
+    chip.setAttribute('data-index', i);
+    chip.addEventListener('click', () => showEntry(i));
+    chipList.appendChild(chip);
+  });
+}
+
+function showEntry(index) {
+  const entry = DATA[index];
+
+  document.querySelectorAll('.word-btn').forEach((b, i) => b.classList.toggle('active', i === index));
+  document.querySelectorAll('.mobile-chip').forEach((c) => c.classList.toggle('active', parseInt(c.dataset.index) === index));
+
+  document.getElementById('empty-state').hidden = true;
+
+  const activeChip = document.querySelector('.mobile-chip.active');
+  if (activeChip) activeChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
+  let quotesHTML = '';
+  if (entry.idezetek && entry.idezetek.length > 0) {
+    quotesHTML = `<div class="quotes-section"><h3>Berzsenyi-idézet${entry.idezetek.length > 1 ? 'ek' : ''}</h3>`;
+    entry.idezetek.forEach(q => {
+      quotesHTML += `<div class="quote-block"><div class="quote-text">${escHtml(q.idezet)}</div><div class="quote-source">${escHtml(q.vers)}</div></div>`;
+    });
+    quotesHTML += `</div>`;
+  }
+
+  const noteHTML = entry.megjegyzes ? `<p class="entry-note">${escHtml(entry.megjegyzes)}</p>` : '';
+
+  document.getElementById('entry-display').innerHTML = `
+    <div class="entry-card">
+      <div class="entry-header">
+        <span class="entry-title">${escHtml(entry.szo)}</span>
+        <span class="badge">${escHtml(entry.tipus)}</span>
+      </div>
+      <p class="entry-def">${escHtml(entry.magyarazat)}</p>
+      ${noteHTML}
+      ${quotesHTML}
+    </div>`;
+
+  document.getElementById('content').focus({ preventScroll: false });
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function filterWords(query) {
+  const q = query.trim().toLowerCase();
+  document.querySelectorAll('.word-btn').forEach((b, i) => { b.hidden = q && !DATA[i].szo.toLowerCase().includes(q); });
+  document.querySelectorAll('.mobile-chip').forEach((c) => { c.hidden = q && !DATA[parseInt(c.dataset.index)].szo.toLowerCase().includes(q); });
+}
+
+document.getElementById('search').addEventListener('input', e => { filterWords(e.target.value); document.getElementById('search-mobile').value = e.target.value; });
+document.getElementById('search-mobile').addEventListener('input', e => { filterWords(e.target.value); document.getElementById('search').value = e.target.value; });
+
+document.getElementById('word-list').addEventListener('keydown', e => {
+  const btns = [...document.querySelectorAll('.word-btn:not([hidden])')];
+  const idx = btns.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown' && idx < btns.length - 1) { btns[idx+1].focus(); e.preventDefault(); }
+  if (e.key === 'ArrowUp' && idx > 0) { btns[idx-1].focus(); e.preventDefault(); }
+  if (e.key === 'Enter') document.activeElement.click();
+});
+
+buildSidebar();
+</script>
+</body>
+</html>
